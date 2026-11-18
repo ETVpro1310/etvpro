@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payer par Wave</title>
+<style>
+  :root {
+    --fond: #f6f4ef;
+    --carte: #ffffff;
+    --texte: #1d2a22;
+    --discret: #5f6f64;
+    --bord: #dcd8cc;
+    --orange: #f77f00;
+    --vert: #009e60;
+    --bouton: #c95b00;
+    --bouton-fonce: #a94a00;
+    --erreur: #b42318;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fond: #101a14;
+      --carte: #18261d;
+      --texte: #eef5f0;
+      --discret: #a5b8ab;
+      --bord: #2c4034;
+      --orange: #ff9a2e;
+      --vert: #2ccf8a;
+      --bouton: #e8741a;
+      --bouton-fonce: #ff8a33;
+      --erreur: #ff8a80;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--fond);
+    color: var(--texte);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+  }
+  main {
+    width: 100%;
+    max-width: 420px;
+    background: var(--carte);
+    border: 1px solid var(--bord);
+    border-radius: 16px;
+    padding: 28px 24px;
+  }
+  .entete { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .logo { width: 56px; height: 56px; flex: none; }
+  .logo img, .logo svg { width: 100%; height: 100%; display: block; }
+  h1 { font-size: 1.5rem; margin: 0; line-height: 1.2; }
+  .sous-titre { margin: 0 0 24px; color: var(--discret); }
+  label { display: block; font-weight: 600; margin-bottom: 8px; }
+  .champ {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    border: 2px solid var(--bord);
+    border-radius: 12px;
+    padding: 10px 16px;
+  }
+  .champ:focus-within { border-color: var(--vert); }
+  .champ input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--texte);
+    font: inherit;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+  .champ span { color: var(--discret); font-weight: 600; }
+  .rapides { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
+  .rapides button {
+    border: 1px solid var(--bord);
+    background: transparent;
+    color: var(--texte);
+    font: inherit;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .rapides button:hover { border-color: var(--orange); }
+  .erreur { color: var(--erreur); min-height: 1.5em; margin: 8px 0 0; font-size: .95rem; }
+  .payer {
+    width: 100%;
+    margin-top: 12px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--bouton);
+    color: #fff;
+    font: inherit;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 16px;
+    cursor: pointer;
+  }
+  .payer:hover { background: var(--bouton-fonce); }
+  :focus-visible { outline: 3px solid var(--vert); outline-offset: 2px; }
+  .manuel { display: none; margin-top: 18px; padding: 16px; border: 2px solid var(--vert); border-radius: 12px; }
+  .manuel.visible { display: block; }
+  .manuel p { margin: 0 0 12px; }
+  .manuel strong { font-size: 1.15rem; }
+  .copier { display: flex; flex-wrap: wrap; gap: 8px; }
+  .copier button {
+    flex: 1 1 140px;
+    border: 1px solid var(--vert);
+    background: transparent;
+    color: var(--texte);
+    font: inherit;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .note { margin: 16px 0 0; font-size: .85rem; color: var(--discret); text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <div class="entete">
+    <div class="logo" id="logo">
+      <!-- Logo provisoire. Pour mettre le vôtre, renseignez LOGO_URL dans le script. -->
+      <svg viewBox="0 0 64 64" role="img" aria-label="Logo">
+        <circle cx="32" cy="32" r="32" fill="#009e60"/>
+        <ellipse cx="32" cy="35" rx="21" ry="14" fill="#f77f00"/>
+        <path d="M21 29 L27 41 M30 27 L36 43 M39 28 L45 41" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <path d="M32 21 C28 15 22 14 18 16 C22 20 27 22 32 21 Z M32 21 C36 15 42 14 46 16 C42 20 37 22 32 21 Z" fill="#fff" opacity=".9"/>
+      </svg>
+    </div>
+    <h1 id="nom"></h1>
+  </div>
+  <p class="sous-titre">Saisissez un montant entre 5&nbsp;000 et 15&nbsp;000&nbsp;FCFA, puis validez dans Wave.</p>
+
+  <label for="montant">Montant</label>
+  <div class="champ">
+    <input id="montant" type="text" inputmode="numeric" autocomplete="off" placeholder="0" autofocus>
+    <span>FCFA</span>
+  </div>
+
+  <div class="rapides" id="rapides"></div>
+  <p class="erreur" id="erreur" role="alert"></p>
+
+  <button class="payer" id="payer" type="button">Payer avec Wave</button>
+  <div class="manuel" id="manuel" role="status">
+    <p>Ouvrez l'application Wave et envoyez <strong id="m-montant"></strong> au <strong id="m-numero"></strong>.</p>
+    <div class="copier">
+      <button type="button" id="c-numero">Copier le numéro</button>
+      <button type="button" id="c-montant">Copier le montant</button>
+    </div>
+  </div>
+  <p class="note" id="note">Vous serez redirigé vers l'application Wave pour confirmer le paiement.</p>
+</main>
+
+<script>
+  // ====== À MODIFIER ======
+  // Nom affiché en haut de la page
+  const NOM_COMMERCE = "ETVpro";
+  // Adresse de votre logo (laisser vide pour garder le logo provisoire)
+  const LOGO_URL = "";
+  // Votre numéro Wave (affiché si vous n'avez pas de lien Wave Business)
+  const NUMERO_WAVE = "0758417374";
+  // Votre lien de paiement Wave Business (à copier depuis l'application Wave Business)
+  const LIEN_WAVE = "https://pay.wave.com/m/M_ci_j2PIDSDQfCLk/c/ci/";
+  // Montants proposés en un clic (FCFA)
+  const MONTANTS_RAPIDES = [5000, 15000];
+  const MONTANT_MINIMUM = 5000;
+  const MONTANT_MAXIMUM = 15000;
+  // ========================
+
+  const champ = document.getElementById("montant");
+  const erreur = document.getElementById("erreur");
+  document.getElementById("nom").textContent = NOM_COMMERCE;
+  document.title = "Payer " + NOM_COMMERCE;
+  if (LOGO_URL) {
+    const img = document.createElement("img");
+    img.src = LOGO_URL;
+    img.alt = "Logo " + NOM_COMMERCE;
+    document.getElementById("logo").replaceChildren(img);
+  }
+
+  const espace = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u202f");
+  const lireMontant = () => parseInt(champ.value.replace(/\D/g, ""), 10) || 0;
+
+  champ.addEventListener("input", () => {
+    const n = lireMontant();
+    champ.value = n ? espace(n) : "";
+    erreur.textContent = "";
+  });
+
+  const rapides = document.getElementById("rapides");
+  MONTANTS_RAPIDES.forEach((m) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = espace(m) + " F";
+    b.addEventListener("click", () => {
+      champ.value = espace(m);
+      erreur.textContent = "";
+      champ.focus();
+    });
+    rapides.appendChild(b);
+  });
+
+  const lienConfigure = !LIEN_WAVE.includes("XXXX");
+  const numeroAffiche = NUMERO_WAVE.replace(/(\d{2})(?=\d)/g, "$1 ");
+  if (!lienConfigure) {
+    document.getElementById("note").textContent = "Le paiement se fait dans l'application Wave.";
+  }
+
+  function copier(texte, bouton) {
+    const ok = () => {
+      const avant = bouton.textContent;
+      bouton.textContent = "Copié";
+      setTimeout(() => (bouton.textContent = avant), 1500);
+    };
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(texte).then(ok, () => {});
+    }
+  }
+
+  function payer() {
+    const n = lireMontant();
+    if (n < MONTANT_MINIMUM || n > MONTANT_MAXIMUM) {
+      erreur.textContent = "Le montant doit être entre " + espace(MONTANT_MINIMUM) + " et " + espace(MONTANT_MAXIMUM) + " FCFA.";
+      champ.focus();
+      return;
+    }
+    if (lienConfigure) {
+      const sep = LIEN_WAVE.includes("?") ? "&" : "?";
+      window.location.href = LIEN_WAVE + sep + "amount=" + n;
+      return;
+    }
+    document.getElementById("m-montant").textContent = espace(n) + " FCFA";
+    document.getElementById("m-numero").textContent = numeroAffiche;
+    document.getElementById("manuel").classList.add("visible");
+    document.getElementById("c-numero").onclick = (e) => copier(NUMERO_WAVE, e.target);
+    document.getElementById("c-montant").onclick = (e) => copier(String(n), e.target);
+  }
+
+  document.getElementById("payer").addEventListener("click", payer);
+  champ.addEventListener("keydown", (e) => { if (e.key === "Enter") payer(); });
+</script>
+</body>
+</html>
